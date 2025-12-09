@@ -1,0 +1,22 @@
+{
+  "name": "VisuAssist AI",
+  "short_name": "VisuAssist",
+  "description": "Real-time AI vision assistant for the visually impaired.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://www.gstatic.com/images/branding/product/2x/googleg_96dp.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://www.gstatic.com/images/branding/product/2x/googleg_96dp.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

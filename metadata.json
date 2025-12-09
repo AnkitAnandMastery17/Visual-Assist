@@ -1,0 +1,8 @@
+{
+  "name": "Visual Assist",
+  "description": "An AI-powered assistant providing real-time environmental guidance and vision support for visually impaired users via Gemini Live API.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
