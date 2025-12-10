@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Mic, Power, Loader2, ScanEye, Type, TriangleAlert, Footprints } from 'lucide-react';
 import { AppState, AppMode } from '../types';
@@ -21,10 +22,22 @@ export const Controls: React.FC<ControlsProps> = ({ appState, appMode, onToggle,
   ];
 
   return (
-    <div className="w-full px-4 pt-4 pb-2 flex flex-col items-center gap-3">
+    <div className="w-full flex flex-col items-center gap-2 pt-1 pb-2">
       
-      {/* Mode Selector - Compact Row */}
-      <div className="flex gap-2 mb-1 w-full justify-center">
+      {/* Mode Selector - Horizontal Scroll */}
+      {/* We use inline styles to hide scrollbar for cross-browser compatibility without global CSS */}
+      <div 
+        className="w-full overflow-x-auto flex gap-3 px-4 py-3 snap-x snap-mandatory"
+        style={{ 
+            scrollbarWidth: 'none', 
+            msOverflowStyle: 'none' 
+        }}
+      >
+        {/* Webkit scrollbar hiding for Chrome/Safari */}
+        <style>{`
+            .mode-scroll::-webkit-scrollbar { display: none; }
+        `}</style>
+        
         {MODES.map((mode) => {
             const Icon = mode.icon;
             const isActive = appMode === mode.id;
@@ -33,7 +46,8 @@ export const Controls: React.FC<ControlsProps> = ({ appState, appMode, onToggle,
                     key={mode.id}
                     onClick={() => onModeChange(mode.id)}
                     className={`
-                        flex flex-col items-center justify-center p-2 rounded-xl min-w-[70px] transition-all duration-200
+                        flex-shrink-0 snap-center
+                        flex flex-col items-center justify-center p-2 rounded-xl min-w-[76px] transition-all duration-200
                         ${isActive 
                             ? 'bg-neutral-800 border border-yellow-500/50 shadow-[0_0_15px_rgba(234,179,8,0.2)] scale-105' 
                             : 'bg-neutral-900/50 border border-neutral-800 text-neutral-500 hover:bg-neutral-800 hover:text-neutral-300'
@@ -46,12 +60,15 @@ export const Controls: React.FC<ControlsProps> = ({ appState, appMode, onToggle,
                         size={22} 
                         className={`mb-1 transition-colors ${isActive ? 'text-yellow-400' : 'text-current'}`} 
                     />
-                    <span className={`text-[11px] font-medium tracking-wide ${isActive ? 'text-yellow-100' : 'text-current'}`}>
+                    <span className={`text-[11px] font-medium tracking-wide whitespace-nowrap ${isActive ? 'text-yellow-100' : 'text-current'}`}>
                         {mode.label}
                     </span>
                 </button>
             )
         })}
+        
+        {/* Spacer to allow scrolling the last item fully into view if needed */}
+        <div className="w-2 flex-shrink-0" />
       </div>
 
       {/* Status & Visualizer - Compact */}

@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { X, Check } from 'lucide-react';
+import { X, Check, Camera, Sun, ZoomIn } from 'lucide-react';
 import { UserSettings } from '../types';
 
 interface SettingsModalProps {
@@ -19,12 +20,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
+  const handleCameraChange = (key: keyof UserSettings['camera'], value: number) => {
+    onUpdateSettings({
+      ...settings,
+      camera: {
+        ...settings.camera,
+        [key]: value
+      }
+    });
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
         
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-neutral-800">
+        <div className="flex items-center justify-between p-4 border-b border-neutral-800 bg-neutral-900 shrink-0">
           <h2 className="text-lg font-bold text-white">Assistant Settings</h2>
           <button 
             onClick={onClose}
@@ -35,12 +46,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </button>
         </div>
 
-        {/* Body */}
-        <div className="p-6 space-y-6">
+        {/* Body (Scrollable) */}
+        <div className="p-6 space-y-8 overflow-y-auto">
           
           {/* Voice Selection */}
           <div className="space-y-3">
-            <label className="text-sm font-medium text-neutral-400 uppercase tracking-wider">
+            <label className="text-sm font-medium text-neutral-400 uppercase tracking-wider flex items-center gap-2">
               Voice Personality
             </label>
             <div className="grid grid-cols-1 gap-2">
@@ -61,11 +72,54 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </div>
 
-          <div className="bg-blue-900/20 p-4 rounded-xl border border-blue-500/20">
-             <p className="text-blue-200 text-xs">
-               Using Gemini 2.5 Flash Native Audio. Changes apply on next connection.
-             </p>
+          {/* Camera Controls */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm font-medium text-neutral-400 uppercase tracking-wider">
+              <Camera size={16} />
+              <span>Camera Adjustments</span>
+            </div>
+            
+            <div className="space-y-4 bg-neutral-800/30 p-4 rounded-xl border border-neutral-800">
+                {/* Zoom Control */}
+                <div className="space-y-2">
+                    <div className="flex justify-between text-xs text-neutral-300">
+                        <span className="flex items-center gap-1"><ZoomIn size={12}/> Zoom</span>
+                        <span>{settings.camera.zoom.toFixed(1)}x</span>
+                    </div>
+                    <input 
+                        type="range" 
+                        min="1" 
+                        max="5" 
+                        step="0.1"
+                        value={settings.camera.zoom}
+                        onChange={(e) => handleCameraChange('zoom', parseFloat(e.target.value))}
+                        className="w-full h-2 bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-yellow-500"
+                    />
+                </div>
+
+                {/* Exposure Control */}
+                <div className="space-y-2">
+                    <div className="flex justify-between text-xs text-neutral-300">
+                        <span className="flex items-center gap-1"><Sun size={12}/> Exposure</span>
+                        <span>{settings.camera.exposure > 0 ? '+' : ''}{settings.camera.exposure.toFixed(1)}</span>
+                    </div>
+                    <input 
+                        type="range" 
+                        min="-2" 
+                        max="2" 
+                        step="0.5"
+                        value={settings.camera.exposure}
+                        onChange={(e) => handleCameraChange('exposure', parseFloat(e.target.value))}
+                        className="w-full h-2 bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-yellow-500"
+                    />
+                </div>
+                
+                <p className="text-[10px] text-neutral-500 italic">
+                    *Requires device support. Zoom may be limited by hardware.
+                </p>
+            </div>
           </div>
+
         </div>
 
       </div>

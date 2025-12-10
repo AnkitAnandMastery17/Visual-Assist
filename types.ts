@@ -22,6 +22,12 @@ export type StreamConfig = {
   jpegQuality: number;
 };
 
+export interface CameraConfig {
+  zoom: number;
+  exposure: number;
+}
+
 export interface UserSettings {
   voiceName: 'Puck' | 'Charon' | 'Kore' | 'Fenrir' | 'Aoede';
+  camera: CameraConfig;
 }

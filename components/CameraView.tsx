@@ -1,17 +1,19 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { blobToBase64 } from '../services/audioUtils';
-import { AppState, AppMode } from '../types';
-import { ScanEye, Loader2 } from 'lucide-react';
+import { AppState, AppMode, UserSettings } from '../types';
+import { ScanEye, Loader2, ZoomIn, Sun } from 'lucide-react';
 
 interface CameraViewProps {
   isActive: boolean;
   appState: AppState;
   appMode: AppMode;
+  settings: UserSettings;
   onFrame: (base64: string) => void;
   onError: (msg: string) => void;
 }
 
-export const CameraView: React.FC<CameraViewProps> = ({ isActive, appState, appMode, onFrame, onError }) => {
+export const CameraView: React.FC<CameraViewProps> = ({ isActive, appState, appMode, settings, onFrame, onError }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -55,6 +57,44 @@ export const CameraView: React.FC<CameraViewProps> = ({ isActive, appState, appM
   };
 
   const config = getConfig();
+
+  // Apply Camera Constraints (Zoom/Exposure)
+  useEffect(() => {
+    if (!stream) return;
+    const track = stream.getVideoTracks()[0];
+    if (!track) return;
+
+    // Check capabilities if supported by browser
+    const capabilities = track.getCapabilities ? track.getCapabilities() : {};
+    const constraints: MediaTrackConstraints = { advanced: [] };
+
+    // Apply Zoom
+    if (settings.camera.zoom > 1) {
+       // Clamp to device max if available, otherwise just try the requested value
+       let targetZoom = settings.camera.zoom;
+       if ((capabilities as any).zoom) {
+           targetZoom = Math.min(Math.max(targetZoom, (capabilities as any).zoom.min), (capabilities as any).zoom.max);
+       }
+       // TypeScript definition for advanced constraints might be missing keys, casting as any
+       (constraints.advanced as any).push({ zoom: targetZoom });
+    }
+
+    // Apply Exposure
+    if (settings.camera.exposure !== 0) {
+        let targetExposure = settings.camera.exposure;
+        if ((capabilities as any).exposureCompensation) {
+            targetExposure = Math.min(Math.max(targetExposure, (capabilities as any).exposureCompensation.min), (capabilities as any).exposureCompensation.max);
+        }
+        (constraints.advanced as any).push({ exposureCompensation: targetExposure });
+    }
+
+    if ((constraints.advanced as any).length > 0) {
+        track.applyConstraints(constraints).catch(e => {
+            console.debug("Camera constraints not fully supported:", e);
+        });
+    }
+
+  }, [stream, settings.camera]);
 
   useEffect(() => {
     const startCamera = async () => {
@@ -211,10 +251,30 @@ export const CameraView: React.FC<CameraViewProps> = ({ isActive, appState, appM
             <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/10 to-transparent pointer-events-none z-10 animate-scan h-[150%]">
                 <div className="w-full h-1 bg-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.8)]"></div>
             </div>
+            
+            {/* Mode Indicator */}
             <div className="absolute bottom-4 left-4 z-10">
                 <span className="bg-black/60 backdrop-blur-md border border-cyan-500/30 text-cyan-400 text-[10px] font-mono px-2 py-1 rounded uppercase tracking-wider shadow-lg">
                     Gemini Vision // Mode: {appMode}
                 </span>
+            </div>
+
+            {/* Camera Parameters HUD */}
+            <div className="absolute top-4 right-4 z-10 flex flex-col items-end gap-2">
+                {settings.camera.zoom > 1 && (
+                    <div className="flex items-center gap-1.5 bg-black/60 backdrop-blur-md border border-cyan-500/30 text-cyan-400 px-2 py-1 rounded-md shadow-lg transition-all animate-in fade-in slide-in-from-right-4">
+                        <ZoomIn size={12} className="opacity-80" />
+                        <span className="text-[10px] font-mono font-bold tracking-wider">{settings.camera.zoom.toFixed(1)}x</span>
+                    </div>
+                )}
+                {settings.camera.exposure !== 0 && (
+                    <div className="flex items-center gap-1.5 bg-black/60 backdrop-blur-md border border-yellow-500/30 text-yellow-400 px-2 py-1 rounded-md shadow-lg transition-all animate-in fade-in slide-in-from-right-4">
+                        <Sun size={12} className="opacity-80" />
+                        <span className="text-[10px] font-mono font-bold tracking-wider">
+                            {settings.camera.exposure > 0 ? '+' : ''}{settings.camera.exposure.toFixed(1)} EV
+                        </span>
+                    </div>
+                )}
             </div>
           </>
       )}

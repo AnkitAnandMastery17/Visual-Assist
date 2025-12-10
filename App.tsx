@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { CameraView } from './components/CameraView';
 import { Controls } from './components/Controls';
@@ -7,7 +8,11 @@ import { AppState, UserSettings, AppMode } from './types';
 import { Settings, Info } from 'lucide-react';
 
 const DEFAULT_SETTINGS: UserSettings = {
-  voiceName: 'Kore'
+  voiceName: 'Kore',
+  camera: {
+    zoom: 1.0,
+    exposure: 0
+  }
 };
 
 const App: React.FC = () => {
@@ -19,9 +24,10 @@ const App: React.FC = () => {
   // Load settings from localStorage or use defaults
   const [settings, setSettings] = useState<UserSettings>(() => {
     try {
-      // Updated storage key to match new app name
       const saved = localStorage.getItem('visual_assist_settings');
-      return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
+      // Merge saved settings with default to ensure new fields (like camera) exist if old data is present
+      const parsed = saved ? JSON.parse(saved) : {};
+      return { ...DEFAULT_SETTINGS, ...parsed, camera: { ...DEFAULT_SETTINGS.camera, ...parsed.camera } };
     } catch {
       return DEFAULT_SETTINGS;
     }
@@ -81,6 +87,7 @@ const App: React.FC = () => {
              isActive={isStreaming} 
              appState={appState}
              appMode={appMode}
+             settings={settings}
              onFrame={sendVideoFrame}
              onError={(msg) => setErrorMsg(msg)}
            />
