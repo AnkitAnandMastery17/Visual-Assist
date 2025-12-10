@@ -1,6 +1,6 @@
 {
-  "name": "VisuAssist AI",
-  "short_name": "VisuAssist",
+  "name": "Visual Assist AI",
+  "short_name": "Visual Assist",
   "description": "Real-time AI vision assistant for the visually impaired.",
   "start_url": "/",
   "display": "standalone",

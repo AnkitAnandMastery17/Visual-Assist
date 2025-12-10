@@ -1,17 +1,46 @@
 import { Blob } from '@google/genai';
 
-export const PCM_SAMPLE_RATE = 16000; // Gemini Input
-export const OUTPUT_SAMPLE_RATE = 24000; // Gemini Output
+export const PCM_SAMPLE_RATE = 16000; // Gemini Input Requirement
+export const OUTPUT_SAMPLE_RATE = 24000; // Gemini Output Frequency
+
+/**
+ * Resamples audio float data to the target sample rate using linear interpolation.
+ * Essential for mobile devices where hardware sample rate (44.1/48kHz) cannot be overridden.
+ */
+function resampleAudio(audioData: Float32Array, origSampleRate: number, targetSampleRate: number): Float32Array {
+  if (origSampleRate === targetSampleRate) return audioData;
+  if (!audioData || audioData.length === 0) return new Float32Array(0);
+  
+  const ratio = origSampleRate / targetSampleRate;
+  const newLength = Math.round(audioData.length / ratio);
+  const result = new Float32Array(newLength);
+  
+  for (let i = 0; i < newLength; i++) {
+    const originalIndex = i * ratio;
+    const index1 = Math.floor(originalIndex);
+    const index2 = Math.min(Math.ceil(originalIndex), audioData.length - 1);
+    const fraction = originalIndex - index1;
+    // Linear interpolation
+    result[i] = audioData[index1] * (1 - fraction) + audioData[index2] * fraction;
+  }
+  return result;
+}
 
 // Convert Float32Array (Web Audio API) to Int16Array (PCM) and then to Gemini Blob
-export function createPCMBlob(data: Float32Array): Blob {
-  const l = data.length;
+export function createPCMBlob(data: Float32Array, inputSampleRate: number): Blob {
+  // 1. Resample if necessary (e.g. 48kHz -> 16kHz)
+  const resampledData = resampleAudio(data, inputSampleRate, PCM_SAMPLE_RATE);
+  
+  // 2. Convert Float32 to Int16 (PCM)
+  const l = resampledData.length;
   const int16 = new Int16Array(l);
   for (let i = 0; i < l; i++) {
     // Clamp values to [-1, 1] before scaling
-    const s = Math.max(-1, Math.min(1, data[i]));
+    const s = Math.max(-1, Math.min(1, resampledData[i]));
+    // Scale to 16-bit integer range
     int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
   }
+
   return {
     data: encode(new Uint8Array(int16.buffer)),
     mimeType: `audio/pcm;rate=${PCM_SAMPLE_RATE}`,

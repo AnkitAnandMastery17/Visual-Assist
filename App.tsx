@@ -3,7 +3,7 @@ import { CameraView } from './components/CameraView';
 import { Controls } from './components/Controls';
 import { SettingsModal } from './components/SettingsModal';
 import { useGeminiLive } from './hooks/useGeminiLive';
-import { AppState, UserSettings } from './types';
+import { AppState, UserSettings, AppMode } from './types';
 import { Settings, Info } from 'lucide-react';
 
 const DEFAULT_SETTINGS: UserSettings = {
@@ -12,13 +12,15 @@ const DEFAULT_SETTINGS: UserSettings = {
 
 const App: React.FC = () => {
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
+  const [appMode, setAppMode] = useState<AppMode>(AppMode.DESCRIBE);
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [showSettings, setShowSettings] = useState(false);
   
   // Load settings from localStorage or use defaults
   const [settings, setSettings] = useState<UserSettings>(() => {
     try {
-      const saved = localStorage.getItem('visuassist_settings');
+      // Updated storage key to match new app name
+      const saved = localStorage.getItem('visual_assist_settings');
       return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
     } catch {
       return DEFAULT_SETTINGS;
@@ -27,7 +29,7 @@ const App: React.FC = () => {
 
   const updateSettings = (newSettings: UserSettings) => {
     setSettings(newSettings);
-    localStorage.setItem('visuassist_settings', JSON.stringify(newSettings));
+    localStorage.setItem('visual_assist_settings', JSON.stringify(newSettings));
   };
 
   const { connect, disconnect, isStreaming, sendVideoFrame } = useGeminiLive({
@@ -36,7 +38,8 @@ const App: React.FC = () => {
         setErrorMsg(msg);
         setAppState(AppState.ERROR);
     },
-    settings
+    settings,
+    mode: appMode
   });
 
   const handleToggle = () => {
@@ -57,7 +60,7 @@ const App: React.FC = () => {
             <div className="w-8 h-8 bg-yellow-400 rounded-lg flex items-center justify-center text-black font-bold text-xl shadow-lg">
                 V
             </div>
-            <h1 className="text-xl font-bold tracking-tight text-white drop-shadow-md">VisuAssist</h1>
+            <h1 className="text-xl font-bold tracking-tight text-white drop-shadow-md">Visual Assist</h1>
         </div>
         <div className="flex gap-4 pointer-events-auto">
             <button 
@@ -77,6 +80,7 @@ const App: React.FC = () => {
            <CameraView 
              isActive={isStreaming} 
              appState={appState}
+             appMode={appMode}
              onFrame={sendVideoFrame}
              onError={(msg) => setErrorMsg(msg)}
            />
@@ -95,7 +99,12 @@ const App: React.FC = () => {
 
       {/* Control Deck - Bottom Sheet */}
       <div className="relative z-20 bg-neutral-900 border-t border-neutral-800 rounded-t-2xl shadow-[0_-10px_40px_rgba(0,0,0,0.5)] safe-pb">
-        <Controls appState={appState} onToggle={handleToggle} />
+        <Controls 
+           appState={appState} 
+           appMode={appMode}
+           onToggle={handleToggle} 
+           onModeChange={setAppMode}
+        />
       </div>
 
       {/* Settings Modal */}

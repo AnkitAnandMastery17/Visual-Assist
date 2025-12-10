@@ -6,6 +6,13 @@ export enum AppState {
   ERROR = 'ERROR'
 }
 
+export enum AppMode {
+  DESCRIBE = 'describe',
+  READ_TEXT = 'read_text',
+  HAZARD = 'hazard',
+  NAVIGATE = 'navigate'
+}
+
 export interface AudioConfig {
   sampleRate: number;
 }
